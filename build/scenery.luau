@@ -7,6 +7,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local SEED = 7
+local SIZE = 2.2 -- every prop is drawn this much bigger than the kit (the field is huge: small props vanish)
+local DENSITY = 1.8 -- more props per stretch of path (steps are divided by this)
+local ACROSS = { Rainbow = true, RockArch = true } -- arches: turned 90 degrees so they span the flight path
+local BIG = { Mesa = true, Rainbow = true, CloudCastle = true, RockArch = true, Supermarket = true } -- already sized
 local rng = Random.new(SEED)
 
 local kit = ReplicatedStorage:FindFirstChild("Assets")
@@ -62,12 +66,16 @@ local function put(
 		return
 	end
 	local model = (source :: Model):Clone()
-	if scale and scale ~= 1 then
-		model:ScaleTo(scale)
+	local finalScale = (scale or 1) * (if BIG[name] then 1 else SIZE)
+	if finalScale ~= 1 then
+		model:ScaleTo(finalScale)
 	end
 	local yaw = if facePath
 		then (if z < 0 then math.pi else 0) + rng:NextNumber(-0.25, 0.25)
 		else rng:NextNumber(0, math.pi * 2)
+	if ACROSS[name] then
+		yaw = math.pi / 2
+	end
 	model:PivotTo(CFrame.new(x, y, z) * CFrame.Angles(0, yaw, 0))
 	for _, part in model:GetDescendants() do
 		if part:IsA("BasePart") then
@@ -107,6 +115,7 @@ end
 -- Walks a zone in steps; at each step `spawn(x)` places something.
 local function along(id: string, step: number, spawn: (number) -> ())
 	local from, to = zoneRange(id)
+	step /= DENSITY
 	local x = from + step * rng:NextNumber(0.2, 0.8)
 	while x < to do
 		spawn(x)
