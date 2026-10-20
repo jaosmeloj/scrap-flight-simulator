@@ -365,6 +365,10 @@ local function step(dt: number)
 			local wantZ = if run.phase == "Ramp"
 				then 0
 				else FlightRules.sidewaysSpeed(FlightConfig, run.yaw, horizontal)
+			if run.phase ~= "Ramp" and math.abs(root.Position.Z) > FlightConfig.FieldHalfWidth then
+				run.yaw = 0 -- at the edge of the map: straighten up
+			end
+			wantZ = FlightRules.keepInField(FlightConfig, root.Position.Z, wantZ)
 			local sideways = Vector3.new(0, 0, (wantZ - v.Z) * mass * FlightConfig.LateralDamping)
 
 			if run.phase == "Ramp" then

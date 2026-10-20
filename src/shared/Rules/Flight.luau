@@ -67,6 +67,15 @@ function Flight.sidewaysSpeed(config: any, yaw: number, speed: number): number
 	return speed * math.sin(math.clamp(yaw, -1, 1) * math.rad(config.MaxYawDegrees))
 end
 
+-- Sideways speed the cart should have at sideways position `z`: the steering's `wanted` inside the field, a push
+-- back toward the middle past FieldHalfWidth (it can't fly off the side of the map).
+function Flight.keepInField(config: any, z: number, wanted: number): number
+	if math.abs(z) <= config.FieldHalfWidth then
+		return wanted
+	end
+	return -math.sign(z) * config.EdgePushSpeed
+end
+
 -- Coins for a flight: distance * CoinsPerStud * (1 + bonus). Never negative.
 function Flight.coins(config: any, distance: number, bonus: number?): number
 	return math.max(0, math.floor(math.max(distance, 0) * config.CoinsPerStud * (1 + (bonus or 0))))

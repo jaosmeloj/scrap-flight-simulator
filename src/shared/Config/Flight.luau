@@ -27,6 +27,8 @@ local Flight = {
 	-- steering (A/D): the nose turns left/right up to MaxYawDegrees (it stays turned when you let go); the cart's
 	-- sideways speed follows the nose, so turning costs forward distance
 	MaxYawDegrees = 35,
+	FieldHalfWidth = 900, -- past this |Z| (build/field.luau is 2000 wide) the cart is steered back toward the middle
+	EdgePushSpeed = 40, -- sideways speed back toward the middle at the edge (studs/s)
 	YawRate = 0.9, -- radians/s the nose turns while A/D is held
 	BankDegrees = 18, -- the cart leans into the turn while A/D is held
 

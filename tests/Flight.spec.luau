@@ -54,6 +54,15 @@ return function(check)
 	check("letting go keeps the heading", Flight.stepYaw(Config, 0.4, 0, 0.5) == 0.4)
 	check("turning is capped", Flight.stepYaw(Config, 0.99, 1, 2) == 1)
 	check("no turn = no sideways speed", Flight.sidewaysSpeed(Config, 0, 200) == 0)
+	check("inside the field the steering wins", Flight.keepInField(Config, 100, 55) == 55)
+	check(
+		"past the right edge it pushes back left",
+		Flight.keepInField(Config, Config.FieldHalfWidth + 1, 55) == -Config.EdgePushSpeed
+	)
+	check(
+		"past the left edge it pushes back right",
+		Flight.keepInField(Config, -Config.FieldHalfWidth - 1, -55) == Config.EdgePushSpeed
+	)
 	check(
 		"full right = speed * sin(MaxYaw)",
 		near(Flight.sidewaysSpeed(Config, 1, 200), 200 * math.sin(math.rad(Config.MaxYawDegrees)))
