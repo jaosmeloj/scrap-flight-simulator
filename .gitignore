@@ -7,3 +7,4 @@ _studio_capturas/
 _studio_base.json.conflitos
 assets/3d/out/
 __pycache__/
+*.fbm/
