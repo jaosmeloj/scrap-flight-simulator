@@ -50,6 +50,7 @@ export type Run = {
 	airTime: number,
 	rampTime: number,
 	rollTime: number,
+	offGroundFor: number, -- while rolling: seconds without ground under the cart (it took off again)
 	slowFor: number,
 	distance: number,
 	linear: LinearVelocity,
@@ -172,6 +173,7 @@ function LaunchService.prepare(player: Player)
 		airTime = 0,
 		rampTime = 0,
 		rollTime = 0,
+		offGroundFor = 0,
 		slowFor = 0,
 		distance = 0,
 		linear = linear,
@@ -382,7 +384,6 @@ local function step(dt: number)
 				local rolling = run.phase == "Rolling"
 				run.airTime += dt
 				if rolling then
-					run.rollTime += dt
 					run.pitchInput = 0
 				end
 				run.pitch = FlightRules.stepPitch(FlightConfig, run.pitch, run.pitchInput, dt)
@@ -404,20 +405,22 @@ local function step(dt: number)
 				local look = CFrame.fromAxisAngle(Vector3.yAxis, -yawRad):VectorToWorldSpace(lookPitched)
 				run.align.CFrame = CFrame.lookAt(Vector3.zero, look) * CFrame.Angles(0, 0, -bank)
 
-				local burning = run.rocket and run.fuel > 0 and not rolling
-				local thrust = if rolling
-					then 0
-					else FlightRules.thrustAccel(
-						FlightConfig,
-						run.stats.engine,
-						run.stats.rocket,
-						run.rocket,
-						run.fuel,
-						speed,
-						run.engineLeft
-					)
+				-- engine and rocket keep pushing on the ground too, while there is fuel
+				local burning = run.rocket and run.fuel > 0
+				local thrust = FlightRules.thrustAccel(
+					FlightConfig,
+					run.stats.engine,
+					run.stats.rocket,
+					run.rocket,
+					run.fuel,
+					speed,
+					run.engineLeft
+				)
 				run.engineLeft = math.max(0, run.engineLeft - dt)
-				player:SetAttribute("EngineOn", run.engineLeft > 0 and run.stats.engine > 0 and not rolling)
+				player:SetAttribute("EngineOn", run.engineLeft > 0 and run.stats.engine > 0)
+				if rolling and thrust <= 0 then
+					run.rollTime += dt -- the roll timer only runs once nothing pushes any more
+				end
 				if burning then
 					run.fuel = math.max(0, run.fuel - dt)
 				end
@@ -453,8 +456,10 @@ local function step(dt: number)
 					rayParams
 				) ~= nil
 				local inWater = root.Position.Y < FlightConfig.WaterLevel
-				-- ground braking while rolling (the Root slides without friction)
-				local brake = if rolling then FlightRules.rollBrake(FlightConfig, v.X, grounded) else 0
+				-- ground braking while rolling and nothing pushes (the Root slides without friction)
+				local brake = if rolling and thrust <= 0
+					then FlightRules.rollBrake(FlightConfig, v.X, grounded)
+					else 0
 				local brakeForce = Vector3.new(-math.sign(v.X) * brake, 0, 0)
 				run.force.Force = (liftDir * lift + against * drag + brakeForce) * mass + sideways
 				if RunService:IsStudio() and os.clock() - run.logAt >= 1 / FlightConfig.TelemetryHz then
@@ -479,6 +484,14 @@ local function step(dt: number)
 				end
 				if not rolling and FlightRules.touchedDown(FlightConfig, run.airTime, grounded) then
 					setPhase(run, "Rolling")
+					run.offGroundFor = 0
+				elseif rolling then
+					-- the engine (or a bump) lifted it off again: back to flying
+					run.offGroundFor = if grounded then 0 else run.offGroundFor + dt
+					if run.offGroundFor >= FlightConfig.RetakeoffSeconds then
+						setPhase(run, "Flight")
+						run.rollTime = 0
+					end
 				end
 				if FlightRules.landed(FlightConfig, run.airTime, run.rollTime, inWater, run.slowFor) then
 					finish(run, lipX)

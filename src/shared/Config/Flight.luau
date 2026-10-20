@@ -41,6 +41,7 @@ local Flight = {
 	-- braking while the wheels touch the ground = min(RollFriction, speed * RollBrakeGain): the cart rolls about
 	-- speed / gain studs after touchdown (~80 at 200 studs/s) and eases to rest (no jerk at the end)
 	RollFriction = 400,
+	RetakeoffSeconds = 0.35, -- rolling with no ground under the cart this long = flying again
 	RollBrakeGain = 2.5,
 	MaxRollSeconds = 10,
 	StopSpeed = 4, -- slower than this for StopSeconds = stopped

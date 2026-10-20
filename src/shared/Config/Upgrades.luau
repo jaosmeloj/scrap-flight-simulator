@@ -72,7 +72,7 @@ local Upgrades = {
 			Name = "Engine",
 			Description = "Pushes the cart forward while there is fuel in the tank.",
 			BaseCost = 60,
-			ThrustPerLevel = 15, -- forward acceleration while it runs (with wings it keeps you in the air)
+			ThrustPerLevel = 25, -- forward acceleration while it runs, in the air and on the ground
 		},
 		FuelTank = {
 			Name = "Fuel Tank",

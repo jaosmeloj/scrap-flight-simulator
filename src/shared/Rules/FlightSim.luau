@@ -51,13 +51,22 @@ function FlightSim.simulate(Flight: any, config: any, stats: any, options: Optio
 		t += dt
 	end
 	local flightDistance = x
-	-- roll: ground braking + air drag, no engine (the server cuts thrust at touchdown)
+	-- roll: the engine (and the rocket, if held) keep pushing on the ground while there is fuel; once nothing
+	-- pushes, ground braking + air drag stop the cart (the roll timer only runs then, like the server)
 	local roll = 0
-	while vx > config.StopSpeed and roll < config.MaxRollSeconds do
-		local brake = Flight.rollBrake(config, vx, true) + Flight.dragAccel(config, stats.drag, vx, 0)
-		vx = math.max(0, vx - brake * dt)
+	while (vx > config.StopSpeed or engineLeft > 0) and roll < config.MaxRollSeconds do
+		local rocketOn = options.rocketHeld == true
+		local thrust = Flight.thrustAccel(config, stats.engine, stats.rocket, rocketOn, fuel, vx, engineLeft)
+		engineLeft = math.max(0, engineLeft - dt)
+		if rocketOn and fuel > 0 then
+			fuel = math.max(0, fuel - dt)
+		end
+		local brake = if thrust > 0 then 0 else Flight.rollBrake(config, vx, true)
+		vx = math.max(0, vx + (thrust - brake - Flight.dragAccel(config, stats.drag, vx, 0)) * dt)
 		x += vx * dt
-		roll += dt
+		if thrust <= 0 then
+			roll += dt
+		end
 	end
 	return { distance = x, airTime = t, flightDistance = flightDistance }
 end
