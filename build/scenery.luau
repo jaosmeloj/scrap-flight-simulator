@@ -28,7 +28,7 @@ end
 local Zones = fresh(ReplicatedStorage.Shared.Config.Zones)
 local Looks = fresh(ReplicatedStorage.Shared.Config.SceneryLooks)
 
-local SEA_TOP = -6 -- build/field.luau: the sea surface
+local WATER = -4 -- build/field.luau: the sea's water surface
 local FIELD_END = 16000
 
 local old = workspace:FindFirstChild("Scenery")
@@ -221,19 +221,19 @@ end)
 
 -- Sea: islands with palms, a lighthouse, boats, buoys, rocks
 along("Sea", 260, function(x)
-	put("Island", "Sea", x, SEA_TOP, side() * rng:NextNumber(60, 600), rng:NextNumber(0.9, 1.8))
-	put("Boat", "Sea", x + 100, SEA_TOP, side() * rng:NextNumber(40, 400), rng:NextNumber(1, 1.4))
+	put("Island", "Sea", x, WATER - 4, side() * rng:NextNumber(60, 600), rng:NextNumber(1, 1.8)) -- beach above the water
+	put("Boat", "Sea", x + 100, WATER - 1, side() * rng:NextNumber(40, 400), rng:NextNumber(1, 1.4)) -- hull in the water
 end)
 along("Sea", 90, function(x)
-	put("Buoy", "Sea", x, SEA_TOP, side() * rng:NextNumber(20, 120))
+	put("Buoy", "Sea", x, WATER + 2.2, side() * rng:NextNumber(20, 120)) -- floats: its base sits at the surface
 	if rng:NextNumber() < 0.5 then
-		put("SeaRocks", "Sea", x + 30, SEA_TOP, side() * rng:NextNumber(60, 700), rng:NextNumber(1, 2))
+		put("SeaRocks", "Sea", x + 30, WATER - 2, side() * rng:NextNumber(60, 700), rng:NextNumber(1, 2))
 	end
 end)
 do
 	local from, to = zoneRange("Sea")
-	put("Lighthouse", "Sea", (from + to) / 2, SEA_TOP, 140, 1.4, true)
-	put("Lighthouse", "Sea", from + 300, SEA_TOP, -180, 1.2, true)
+	put("Lighthouse", "Sea", (from + to) / 2, WATER - 2, 140, 1.4, true)
+	put("Lighthouse", "Sea", from + 300, WATER - 2, -180, 1.2, true)
 end
 
 -- Clouds: puffs at many heights, floating islands, rainbows over the path, the castle at the end

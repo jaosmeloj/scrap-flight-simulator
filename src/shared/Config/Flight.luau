@@ -48,7 +48,7 @@ local Flight = {
 	MaxRollSeconds = 10,
 	StopSpeed = 4, -- slower than this for StopSeconds = stopped
 	StopSeconds = 1,
-	WaterLevel = -2, -- Y below which the cart is in the water (set by the map phase)
+	WaterLevel = -2, -- cart centre below this Y = it fell in the water (the Sea's surface is Y -4, build/field.luau)
 	MaxFlightSeconds = 90,
 	ReturnSeconds = 3, -- back to the ramp this long after landing
 
